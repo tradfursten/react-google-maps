@@ -8,6 +8,7 @@ import createReactClass from "create-react-class";
 import {
   MAP,
   OVERLAY_VIEW,
+  MARKER_CLUSTERER,
 } from "./constants";
 
 import {
@@ -30,6 +31,7 @@ const controlledPropTypes = {
   mapPaneName: PropTypes.string,
   position: PropTypes.object,
   bounds: PropTypes.object,
+  visible: PropTypes.bool,
 };
 
 const defaultUncontrolledPropTypes = addDefaultPrefixToPropTypes(controlledPropTypes);
@@ -49,6 +51,10 @@ const publicMethodMap = {
   getPanes(overlayView) { return overlayView.getPanes(); },
 
   getProjection(overlayView) { return overlayView.getProjection(); },
+
+  getPosition(overlayView) { return overlayView.getPosition(); },
+
+  getVisible(overlayView) { return overlayView.getVisible(); },
   // END - Public APIs
 };
 
@@ -82,6 +88,7 @@ export default _.flowRight(
 
   contextTypes: {
     [MAP]: PropTypes.object,
+    [MARKER_CLUSTERER]: PropTypes.object,
   },
 
   getInitialState() {
@@ -93,7 +100,12 @@ export default _.flowRight(
     overlayView.onRemove = this.onRemove;
     // You must call setMap() with a valid Map object to trigger the call to
     // the onAdd() method and setMap(null) in order to trigger the onRemove() method.
-    overlayView.setMap(this.context[MAP]);
+    const markerClusterer = this.context[MARKER_CLUSTERER];
+    if (markerClusterer) {
+      markerClusterer.addMarker(overlayView, !!this.props.noRedraw);
+    } else {
+      overlayView.setMap(this.context[MAP]);
+    }
     return {
       [OVERLAY_VIEW]: overlayView,
     };
@@ -136,12 +148,15 @@ export default _.flowRight(
   componentWillUnmount() {
     const overlayView = getInstanceFromComponent(this);
     if (overlayView) {
+      const markerClusterer = this.context[MARKER_CLUSTERER];
+      if (markerClusterer) {
+        markerClusterer.removeMarker(overlayView, !!this.props.noRedraw);
+      }
       overlayView.setMap(null);
-      // You must implement three methods: onAdd(), draw(), and onRemove().
-      overlayView.onAdd = null;
-      overlayView.draw = null;
-      overlayView.onRemove = null;
     }
+    overlayView.onAdd = null;
+    overlayView.draw = null;
+    overlayView.onRemove = null;
   },
 
   render() {
