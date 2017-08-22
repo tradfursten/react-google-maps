@@ -98,6 +98,9 @@ export default _.flowRight(
     overlayView.onAdd = this.onAdd;
     overlayView.draw = this.draw;
     overlayView.onRemove = this.onRemove;
+    overlayView.getPosition = this._getPosition;
+    overlayView.getVisible = this.getVisible;
+    overlayView.getDraggable = ()=> { return false; };
     // You must call setMap() with a valid Map object to trigger the call to
     // the onAdd() method and setMap(null) in order to trigger the onRemove() method.
     const markerClusterer = this.context[MARKER_CLUSTERER];
@@ -109,6 +112,10 @@ export default _.flowRight(
     return {
       [OVERLAY_VIEW]: overlayView,
     };
+  },
+
+  _getPosition () {
+    return this.props.position;
   },
 
   onAdd() {
